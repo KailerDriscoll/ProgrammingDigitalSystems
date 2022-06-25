@@ -1,0 +1,94 @@
+Kailer Driscoll
+Professor Kooros
+Project 1
+February 21, 2022
+
+
+Part I: Basic Adder
+Taking the input from the 10 switches on the DE-10 Lite board, display the sum off the first 5 switches and the other 5 switches as two independent binary numbers.
+	(Submitted separately)
+
+.global _start
+_start:
+	
+	.text
+	.equ LEDs, 0xFF200000
+	.equ SWITCHES, 0xFF200040
+	.global _start
+_start:
+	movia r2, LEDs # Address of LEDs
+	movia r3, SWITCHES # Address of switches
+LOOP:
+	ldwio r4, (r3) # Read the state of switches
+	# <Your code to modify r4 here>
+	andi r5, r4, 0x1F
+	andi r6, r4, 0xFE0
+	srli r6, r6, 0x05
+	add r4, r5, r6
+	stwio r4, (r2) # Display the state on LEDs
+	br LOOP
+.end
+
+
+
+Part II: Understanding Assembly
+	2.1 Interpreting Code
+		.global _start 
+_start: 
+/* the following two instr. (orhi and ori) are what movia converts to */
+orhi r2, r0, %hi(X)
+ori r2, r2, %lo(X)
+movia r3, Y
+movia r4, N
+ldw r4, 0(r4)
+add r5, r0, r0
+LABEL: 
+ldw r6, 0(r2)
+stw r6, 0(r3)
+addi r2, r2, 4
+addi r3, r3, 4
+subi r4, r4, 1
+bgt r4, r0, LABEL
+STOP: 
+br STOP
+.data
+N:
+.word 6
+X:
+.word 5, 3, -6, 19, 8, 12
+Y:
+.word 0, 0, 0, 0, 0, 0
+
+Explanation:
+	The assembly code above works around 3 variables: X (pointer stored in r2), Y (pointer stored in r3), and N (pointer stored in r4). Immediately, r4 is loaded to take on the current value of N, which is set to be 6. As far as I can tell r5 does not do anything in this program, but it is set to 0.
+The code then enters the “LABEL” loop which executes, then checks whether r4 (N) is greater than r0 (0). If true it repeats. The loop consists of an execution of loading the contents of r2 (X) and storing it in r3 (Y). The program then increments both X and Y by 4. My interpretation is that the value at the memory location of X is passed to Y, and both X and Y are increased by the size of an integer, making these integer arrays. This program is copying array X into Y. Finally, N is decremented by one before reaching the end of the loop.
+
+Equivilant C Code:
+// Assigns r2 to X, r3 to Y, r4 to N
+// Initializes r5 to 0
+
+int *X = [5, 3, -6, 19, 8, 12];
+int *Y = [0, 0, 0, 0, 0, 0];
+int N = 6;
+do {
+	Y[i]=X[i];
+	i++;
+N--;
+} (while N>0)
+
+
+2.2 Decoding Instructions
+993ff915
+9 9 3 F F 9 1 5
+1001 1001 0011 1111 1111 1001 0001 0101
+10011 00100 1111 1111 1110 0100 01 0101
+stw r4 0xFFE4(r19)
+
+
+2.3 Encoding Instructions
+divu r14,r5,r22
+00101 10110 01110 10 0100 00000 11 1010
+0010 1101 1001 1101 0010 0000 0011 1010
+0x2D9D203A
+
+
